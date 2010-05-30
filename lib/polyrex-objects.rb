@@ -12,7 +12,7 @@ class PolyrexObjects
     a.each do |x|
       name, raw_fields = x.split('[')
       fields = raw_fields.chop.split(',').map &:strip
-      @class_names << name.captalize
+      @class_names << name.capitalize
 
       classx = []  
       classx << "class #{name.capitalize}"
@@ -29,5 +29,9 @@ class PolyrexObjects
 
   def to_a
     @class_names.map {|x| eval(x)}
+  end
+  
+  def to_h
+    Hash[self.to_a.map {|x| [x.name[/\w+$/], x]}]
   end
 end

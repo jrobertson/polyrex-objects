@@ -3,6 +3,7 @@
 # file: polyrex-objects.rb
 
 require 'rexml/document'
+require 'polyrex-createobject'
 
 class PolyrexObjects
   include REXML
@@ -22,7 +23,7 @@ class PolyrexObjects
         classx = []  
         classx << "class #{name.capitalize}"
         classx << "include REXML"
-        classx << "def initialize(node); @node = node; end"
+        classx << "def initialize(node, id=nil); @id=id; @node = node;  @create = PolyrexCreateObject.new('#{schema}'); end"
         fields.each do |field|
           classx << "def #{field}; XPath.first(@node, 'summary/#{field}/text()'); end"
           classx << "def #{field}=(text); XPath.first(@node, 'summary/#{field}').text = text; end"
@@ -40,9 +41,18 @@ class PolyrexObjects
         def records()
           XPath.each(@node, 'records/*') {|record| yield(#{@class_names[i]}.new(record))}
         end
+
+        def create(id=nil)
+          @create.id = id || @id          
+          @id = @id.to_i + 1
+          @create.record = @node
+          @create
+        end
+        
       }"
     end
 
+   
   end
 
   def to_a
@@ -52,4 +62,6 @@ class PolyrexObjects
   def to_h
     Hash[self.to_a.map {|x| [x.name[/\w+$/], x]}]
   end
+  
+
 end

@@ -36,7 +36,7 @@ class PolyrexObjects
     # implement the child_object within each class object
     @class_names[0..-2].reverse.each_with_index do |class_name, k|    
       i = @class_names.length - (k + 1)
-      eval "#{class_name}.class_eval { 
+      eval "#{@class_name}.class_eval { 
         def records()
           XPath.each(@node, 'records/*') {|record| yield(#{@class_names[i]}.new(record))}
         end

@@ -8,8 +8,11 @@ require 'polyrex-createobject'
 class PolyrexObjects
   include REXML
   
-  def initialize(schema)
+  def initialize(schema, node=nil, id=nil)
 
+    @node = node
+    @id = id
+    
     a = schema.split('/')
     a.shift
     @class_names = []
@@ -39,7 +42,7 @@ class PolyrexObjects
       i = @class_names.length - (k + 1)
       eval "#{class_name}.class_eval { 
         def records()
-          XPath.each(@node, 'records/*') {|record| yield(#{@class_names[i]}.new(record))}
+          XPath.match(@node, 'records/*').map {|record| #{@class_names[i]}.new(record)}
         end
 
         def create(id=nil)
@@ -49,8 +52,16 @@ class PolyrexObjects
           @create
         end
         
+        alias #{@class_names[i].downcase} records
+        
       }"
     end
+    
+    methodx = @class_names.map do |name|
+      %Q(def #{name.downcase}(); #{name}.new(@node, @id); end)
+    end
+    
+    self.instance_eval(methodx.join("\n"))
 
    
   end

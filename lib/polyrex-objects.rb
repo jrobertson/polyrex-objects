@@ -26,11 +26,16 @@ class PolyrexObjects
         classx = []  
         classx << "class #{name.capitalize}"
         classx << "include REXML"
-        classx << "def initialize(node, id=nil); @id=id; @node = node;  @create = PolyrexCreateObject.new('#{schema}'); end"
+        classx << "def initialize(node, id=nil)"
+        classx << "@id=id; @node = node;"
+        classx << "@create = PolyrexCreateObject.new('#{schema}')"
+        classx << "end"
         fields.each do |field|
-          classx << "def #{field}; XPath.first(@node, 'summary/#{field}/text()'); end"
+          classx << "def #{field}; XPath.first(@node, 'summary/#{field}/text()').to_s; end"
           classx << "def #{field}=(text); XPath.first(@node, 'summary/#{field}').text = text; end"
         end
+        classx << "def to_xml(); @node.to_s; end"
+        classx << "def with(); yield(self); end"
         classx << "end"
 
         eval classx.join("\n")
@@ -42,8 +47,24 @@ class PolyrexObjects
       i = @class_names.length - (k + 1)
       eval "#{class_name}.class_eval { 
         def records()
-          XPath.match(@node, 'records/*').map {|record| #{@class_names[i]}.new(record)}
-        end
+          objects = XPath.match(@node, 'records/*').map {|record| #{@class_names[i]}.new(record)}
+
+          def objects.records=(node); @node = node; end
+          def objects.records(); @node; end
+
+          def objects.sort_by!(&element_blk)
+            a = XPath.match(@node, 'records/*').sort_by &element_blk
+            records = XPath.first(@node, 'records')
+            records.parent.delete records
+            records = Element.new 'records'
+            a.each {|record| records.add record}
+            @node.add records
+            XPath.match(@node, 'records/*').map {|record| #{@class_names[i]}.new(record)}
+          end
+
+          objects.records = @node
+          objects
+        end        
 
         def create(id=nil)
           @create.id = id || @id          
@@ -51,9 +72,17 @@ class PolyrexObjects
           @create.record = @node
           @create
         end
-        
+                
         alias #{@class_names[i].downcase} records
         
+      }"
+    end
+    
+    @class_names[1..-1].each_with_index do |class_name, k|    
+      eval "#{class_name}.class_eval {        
+        def parent()
+          #{@class_names[k]}.new(@node.parent.parent)
+        end                
       }"
     end
     

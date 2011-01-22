@@ -2,11 +2,10 @@
 
 # file: polyrex-objects.rb
 
-require 'rexml/document'
 require 'polyrex-createobject'
+require 'rexle'
 
 class PolyrexObjects
-  include REXML
   
   def initialize(schema, node=nil, id=nil)
 
@@ -25,14 +24,13 @@ class PolyrexObjects
 
         classx = []  
         classx << "class #{name.capitalize}"
-        classx << "include REXML"
         classx << "def initialize(node, id=nil)"
         classx << "@id=id; @node = node;"
         classx << "@create = PolyrexCreateObject.new('#{schema}')"
         classx << "end"
         fields.each do |field|
-          classx << "def #{field}; XPath.first(@node, 'summary/#{field}/text()').to_s; end"
-          classx << "def #{field}=(text); XPath.first(@node, 'summary/#{field}').text = text; end"
+	  classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
+	  classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
         end
         classx << "def to_xml(); @node.to_s; end"
         classx << "def with(); yield(self); end"
@@ -47,19 +45,19 @@ class PolyrexObjects
       i = @class_names.length - (k + 1)
       eval "#{class_name}.class_eval { 
         def records()
-          objects = XPath.match(@node, 'records/*').map {|record| #{@class_names[i]}.new(record)}
+	  objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
 
           def objects.records=(node); @node = node; end
           def objects.records(); @node; end
 
           def objects.sort_by!(&element_blk)
-            a = XPath.match(@node, 'records/*').sort_by &element_blk
-            records = XPath.first(@node, 'records')
-            records.parent.delete records
-            records = Element.new 'records'
+	    a = @node.xpath('records/*').sort_by &element_blk
+	    records = @node.xpath('records')
+            records.delete
+            records = Rexle::Element.new 'records'
             a.each {|record| records.add record}
             @node.add records
-            XPath.match(@node, 'records/*').map {|record| #{@class_names[i]}.new(record)}
+            @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
           end
 
           objects.records = @node
@@ -81,7 +79,7 @@ class PolyrexObjects
     @class_names[1..-1].each_with_index do |class_name, k|    
       eval "#{class_name}.class_eval {        
         def parent()
-          #{@class_names[k]}.new(@node.parent)
+          #{@class_names[k]}.new(@node.parent.parent)
         end                
       }"
     end

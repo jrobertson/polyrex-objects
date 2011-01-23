@@ -32,7 +32,7 @@ class PolyrexObjects
 	  classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
 	  classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
         end
-        classx << "def to_xml(); @node.xml; end"
+        classx << "def to_xml(options={}); @node.xml(options); end"
         classx << "def with(); yield(self); end"
         classx << "end"
 

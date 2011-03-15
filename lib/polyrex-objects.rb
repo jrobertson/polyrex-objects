@@ -10,7 +10,7 @@ class PolyrexObjects
   def initialize(schema, node=nil, id=nil)
 
     @node = node
-    @id = id
+    @@id = id
     
     a = schema.split('/')
     a.shift
@@ -25,12 +25,12 @@ class PolyrexObjects
         classx = []  
         classx << "class #{name.capitalize}"
         classx << "def initialize(node, id=nil)"
-        classx << "@id=id; @node = node;"
+        classx << "@@id=id; @node = node;"
         classx << "@create = PolyrexCreateObject.new('#{schema}')"
         classx << "end"
         fields.each do |field|
-	  classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
-	  classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
+    classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
+    classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
         end
         classx << "def to_xml(options={}); @node.xml(options); end"
         classx << "def with(); yield(self); end"
@@ -45,14 +45,14 @@ class PolyrexObjects
       i = @class_names.length - (k + 1)
       eval "#{class_name}.class_eval { 
         def records()
-	  objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
+          objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
 
           def objects.records=(node); @node = node; end
           def objects.records(); @node; end
 
           def objects.sort_by!(&element_blk)
-	    a = @node.xpath('records/*').sort_by &element_blk
-	    records = @node.xpath('records')
+            a = @node.xpath('records/*').sort_by &element_blk
+            records = @node.xpath('records')
             records.delete
             records = Rexle::Element.new 'records'
             a.each {|record| records.add record}
@@ -65,9 +65,9 @@ class PolyrexObjects
         end        
 
         def create(id=nil)
-          @create.id = id || @id          
-          @id = @id.to_i + 1
-          @create.record = @node
+          @create.id = id || @@id          
+          @@id.succ!
+          @create.record = @node.element('records')
           @create
         end
                 
@@ -85,7 +85,7 @@ class PolyrexObjects
     end
     
     methodx = @class_names.map do |name|
-      %Q(def #{name.downcase}(); #{name}.new(@node, @id); end)
+      %Q(def #{name.downcase}(); #{name}.new(@node, @@id); end)
     end
     
     self.instance_eval(methodx.join("\n"))

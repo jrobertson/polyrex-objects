@@ -32,7 +32,7 @@ class PolyrexObjects
 	  classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
 	  classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
         end
-        classx << "def to_xml(); @node.xml; end"
+        classx << "def to_xml(options={}); @node.xml(options); end"
         classx << "def with(); yield(self); end"
         classx << "end"
 
@@ -45,14 +45,14 @@ class PolyrexObjects
       i = @class_names.length - (k + 1)
       eval "#{class_name}.class_eval { 
         def records()
-	  objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
+          objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
 
           def objects.records=(node); @node = node; end
           def objects.records(); @node; end
 
           def objects.sort_by!(&element_blk)
-	    a = @node.xpath('records/*').sort_by &element_blk
-	    records = @node.xpath('records')
+            a = @node.xpath('records/*').sort_by &element_blk
+            records = @node.xpath('records')
             records.delete
             records = Rexle::Element.new 'records'
             a.each {|record| records.add record}

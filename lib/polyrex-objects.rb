@@ -6,8 +6,33 @@ require 'polyrex-createobject'
 require 'rexle'
 
 class PolyrexObjects
+
+  class PolyrexObject
+    
+    def initialize(node, id='0')
+      @@id = id
+      @node = node
+    end
+    
+    def create(id=nil)
+      id ||= @@id 
+      id.succ!
+      @create.id = id         
+
+      @create.record = @node.element('records')
+      @create
+    end    
+
+    def to_xml(options={})
+      @node.xml(options)
+    end
+    
+    def with()
+      yield(self)
+    end
+  end
   
-  def initialize(schema, node=nil, id=nil)
+  def initialize(schema, id='0', node=nil)
 
     @node = node
     @@id = id
@@ -23,17 +48,15 @@ class PolyrexObjects
         @class_names << name.capitalize
 
         classx = []  
-        classx << "class #{name.capitalize}"
-        classx << "def initialize(node, id=nil)"
-        classx << "@@id=id; @node = node;"
-        classx << "@create = PolyrexCreateObject.new('#{schema}')"
+        classx << "class #{name.capitalize} < PolyrexObject"
+        classx << "def initialize(node=nil, id='0')"
+        classx << "super(node,id)"
+        classx << "@create = PolyrexCreateObject.new('#{schema}', @@id)"
         classx << "end"
         fields.each do |field|
-    classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
-    classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
+          classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
+          classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
         end
-        classx << "def to_xml(options={}); @node.xml(options); end"
-        classx << "def with(); yield(self); end"
         classx << "end"
 
         eval classx.join("\n")
@@ -45,7 +68,7 @@ class PolyrexObjects
       i = @class_names.length - (k + 1)
       eval "#{class_name}.class_eval { 
         def records()
-          objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
+          objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record, @@id)}
 
           def objects.records=(node); @node = node; end
           def objects.records(); @node; end
@@ -63,13 +86,6 @@ class PolyrexObjects
           objects.records = @node
           objects
         end        
-
-        def create(id=nil)
-          @create.id = id || @@id          
-          @@id.succ!
-          @create.record = @node.element('records')
-          @create
-        end
                 
         alias #{@class_names[i].downcase} records
         
@@ -79,7 +95,8 @@ class PolyrexObjects
     @class_names[1..-1].each_with_index do |class_name, k|    
       eval "#{class_name}.class_eval {        
         def parent()
-          #{@class_names[k]}.new(@node.parent.parent)
+          puts 'eee7 '  + @@id.to_s
+          #{@class_names[k]}.new(@node.parent.parent, @@id)
         end                
       }"
     end
@@ -89,7 +106,6 @@ class PolyrexObjects
     end
     
     self.instance_eval(methodx.join("\n"))
-
    
   end
 

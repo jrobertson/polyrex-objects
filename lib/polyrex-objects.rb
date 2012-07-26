@@ -54,13 +54,20 @@ class PolyrexObjects
           classx << "class #{name.capitalize} < PolyrexObject"
           classx << "def initialize(node=nil, id='0')"
           classx << "super(node,id)"
+
+          classx << "a = node.xpath('summary/*',&:name)"
+          classx << "yaml_fields = a - (#{fields}  + %w(format_mask))"
+          classx << "yaml_fields.each do |field|"
+          classx << %q(instance_eval "def #{field}; YAML.load(@node.element('summary/#{field}/text()')); end")
+          classx << "end"
+          
           classx << "@create = PolyrexCreateObject.new('#{schema}', @@id)"
           classx << "end"
           fields.each do |field|
             classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
             classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
           end
-          classx << "end"
+          classx << "end"          
 
           eval classx.join("\n")
         end

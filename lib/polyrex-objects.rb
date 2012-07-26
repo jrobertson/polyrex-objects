@@ -2,14 +2,9 @@
 
 # file: polyrex-objects.rb
 
-require 'requestor'
 
-code = Requestor.read('http://rorbuilder.info/r/ruby/') do |x|
-  x.require 'polyrex-createobject'
-  x.require 'rexle'
-end
-
-eval code
+require 'polyrex-createobject'
+require 'rexle'
 
 
 class PolyrexObjects

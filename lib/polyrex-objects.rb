@@ -25,6 +25,14 @@ class PolyrexObjects
       @create
     end    
 
+    def delete()
+      @node.delete
+    end
+
+    def inspect()
+      "#<PolyrexObject:%s" % __id__
+    end
+
     def to_xml(options={})
       @node.xml(options)
     end
@@ -73,35 +81,16 @@ class PolyrexObjects
         end
       end
 
-      # implement the child_object within each class object
-      @class_names[0..-2].reverse.each_with_index do |class_name, k|    
-        i = @class_names.length - (k + 1)
-        eval "#{class_name}.class_eval { 
-          def records()
-            objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record, @@id)}
+      if @class_names.length < 2 then
+        make_def_records(@class_names.first)
+      else
+        # implement the child_object within each class object
+        @class_names[0..-2].reverse.each_with_index do |class_name, k|    
 
-            def objects.records=(node); @node = node; end
-            def objects.records(); @node; end
-
-            def objects.sort_by!(&element_blk)
-              a = @node.xpath('records/*').sort_by &element_blk
-              records = @node.xpath('records')
-              records.delete
-              records = Rexle::Element.new 'records'
-              a.each {|record| records.add record}
-              @node.add records
-              @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
-            end
-
-            objects.records = @node
-            objects
-          end        
-                  
-          alias #{@class_names[i].downcase} records
-          
-        }"
-      end
-      
+          i = @class_names.length - (k + 1)
+          make_def_records(class_name,i)
+        end
+      end      
       @class_names[1..-1].each_with_index do |class_name, k|    
         eval "#{class_name}.class_eval {        
           def parent()
@@ -116,6 +105,35 @@ class PolyrexObjects
       
       self.instance_eval(methodx.join("\n"))
     end
+  end
+
+  def make_def_records(class_name, i=0)
+
+    eval "#{class_name}.class_eval { 
+      def records()
+        objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record, @@id)}
+
+        def objects.records=(node); @node = node; end
+        def objects.records(); @node; end
+
+        def objects.sort_by!(&element_blk)
+          a = @node.xpath('records/*').sort_by &element_blk
+          records = @node.xpath('records')
+          records.delete
+          records = Rexle::Element.new 'records'
+          a.each {|record| records.add record}
+          @node.add records
+          @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record)}
+        end
+
+        objects.records = @node
+        objects
+      end        
+              
+      alias #{@class_names[i].downcase} records
+      
+    }"
+
   end
 
   def to_a

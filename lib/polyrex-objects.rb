@@ -72,8 +72,19 @@ class PolyrexObjects
           classx << "@create = PolyrexCreateObject.new('#{schema}', @@id)"
           classx << "end"
           fields.each do |field|
-            classx << "def #{field}; @node.element('summary/#{field}/text()'); end"
-            classx << "def #{field}=(text); @node.element('summary/#{field}').text = text; end"
+            classx << "def #{field}"
+            classx << "  if @node.element('summary/#{field}').nil? then"
+            classx << "    @node.element('summary').add Rexle::Element.new('#{field}')"
+            classx << "  end"
+            classx << "  @node.element('summary/#{field}/text()')"
+            classx << "end"
+            classx << "def #{field}=(text)"
+            classx << "  if @node.element('summary/#{field}').nil? then"
+            classx << "    @node.element('summary').add Rexle::Element.new('#{field}', text)"
+            classx << "  else"
+            classx << "    @node.element('summary/#{field}').text = text"
+            classx << "  end"
+            classx << "end"
           end
           classx << "end"          
 

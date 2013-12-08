@@ -138,6 +138,13 @@ class PolyrexObjects
         end
 
         objects.records = @node
+
+        def objects.remove_all()
+          e = @node.element('records')
+          e.insert_before Rexle::Element.new('records')
+          e.delete
+        end
+
         objects
       end        
               

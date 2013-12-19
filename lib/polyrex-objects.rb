@@ -29,6 +29,10 @@ class PolyrexObjects
       @node.delete
     end
 
+    def element(xpath)
+      @node.element(xpath)
+    end
+
     def inspect()
       "#<PolyrexObject:%s" % __id__
     end
@@ -39,6 +43,10 @@ class PolyrexObjects
     
     def with()
       yield(self)
+    end
+
+    def xpath(s)
+      @node.xpath(s)
     end
   end
   

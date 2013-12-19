@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'polyrex-objects'
-  s.version = '0.6.14'
+  s.version = '0.6.15'
   s.summary = 'polyrex-objects'
   s.authors = ['James Robertson']
   s.files = Dir['lib/**/*.rb']

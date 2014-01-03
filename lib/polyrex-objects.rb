@@ -9,7 +9,9 @@ require 'rexle'
 
 class PolyrexObjects
 
-  class PolyrexObject    
+  class PolyrexObject
+
+    attr_reader :node    
 
     def initialize(node, id='0')
       @@id = id
@@ -18,7 +20,7 @@ class PolyrexObjects
     end
     
     def add(pxobj)
-      self.create.method(pxobj.class.to_s[/[^:]+$/].downcase).call(pxobj.to_h)
+      @node.element('records').add pxobj.node
     end
 
     def create(id=nil)

@@ -9,13 +9,18 @@ require 'rexle'
 
 class PolyrexObjects
 
-  class PolyrexObject
-    
+  class PolyrexObject    
+
     def initialize(node, id='0')
       @@id = id
       @node = node
+      @fields =[]
     end
     
+    def add(pxobj)
+      self.create.method(pxobj.class.to_s[/[^:]+$/].downcase).call(pxobj.to_h)
+    end
+
     def create(id=nil)
       id ||= @@id 
       id.succ!
@@ -35,6 +40,12 @@ class PolyrexObjects
 
     def inspect()
       "#<PolyrexObject:%s" % __id__
+    end
+
+    def to_h()
+      @fields.inject({}) do |r, field|
+        r.merge(field => self.method(field).call)
+      end
     end
 
     def to_xml(options={})
@@ -76,9 +87,11 @@ class PolyrexObjects
           classx << "yaml_fields.each do |field|"
           classx << %q(instance_eval "def #{field}; YAML.load(@node.element('summary/#{field}/text()')); end")
           classx << "end"
-          
+
+          classx << "@fields = %i(#{fields.join(' ')})"          
           classx << "@create = PolyrexCreateObject.new('#{schema}', @@id)"
           classx << "end"
+
           fields.each do |field|
             classx << "def #{field}"
             classx << "  if @node.element('summary/#{field}').nil? then"
@@ -94,6 +107,7 @@ class PolyrexObjects
             classx << "  end"
             classx << "end"
           end
+
           classx << "end"          
 
           eval classx.join("\n")

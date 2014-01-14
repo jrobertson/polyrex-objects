@@ -99,7 +99,7 @@ class PolyrexObjects
             classx << "  if @node.element('summary/#{field}').nil? then"
             classx << "    @node.element('summary').add Rexle::Element.new('#{field}')"
             classx << "  end"
-            classx << "  @node.element('summary/#{field}/text()')"
+            classx << "  @node.element('summary/#{field}/text()').clone"
             classx << "end"
             classx << "def #{field}=(text)"
             classx << "  if @node.element('summary/#{field}').nil? then"

@@ -150,7 +150,12 @@ class PolyrexObjects
 
     eval "#{class_name}.class_eval { 
       def records()
-        objects = @node.xpath('records/*').map {|record| #{@class_names[i]}.new(record, @@id)}
+
+        classes = {#{@class_names.map{|x| %Q(%s: %s) % [x[/[^:]+$/].downcase,x]}.join(',')} }
+
+        objects = @node.xpath('records/*').map do |record| 
+          classes[record.name.to_sym].new(record, @@id)
+        end
 
         def objects.records=(node); @node = node; end
         def objects.records(); @node; end

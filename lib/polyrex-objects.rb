@@ -23,6 +23,10 @@ class PolyrexObjects
       @node.element('records').add pxobj.node
     end
 
+    def clone()
+      self.class.new Rexle.new(self.node.to_a).root
+    end
+
     def create(id=nil)
       id ||= @@id 
       id.succ!

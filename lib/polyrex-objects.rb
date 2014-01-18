@@ -40,6 +40,10 @@ class PolyrexObjects
       @node.delete
     end
 
+    def deep_clone()
+      self.class.new Rexle.new(self.to_xml).root
+    end
+
     def element(xpath)
       @node.element(xpath)
     end

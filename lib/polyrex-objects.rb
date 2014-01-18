@@ -73,12 +73,15 @@ class PolyrexObjects
     @@id = id
 
     if schema then
+
       a = schema.split('/')
       a.shift
       @class_names = []
 
       a.each do |x|
+
         name, raw_fields = x.split('[')
+
         if raw_fields then
           fields = raw_fields.chop.split(',').map &:strip
           @class_names << name.capitalize
@@ -86,10 +89,11 @@ class PolyrexObjects
           classx = []  
           classx << "class #{name.capitalize} < PolyrexObject"
           classx << "def initialize(node=nil, id='0')"
-          classx << "super(node,id)"
+          classx << "  node ||= Rexle.new('<#{name}><summary/><records/></#{name}>').root"
+          classx << "  super(node,id)"
 
-          classx << "a = node.xpath('summary/*',&:name)"
-          classx << "yaml_fields = a - (#{fields}  + %w(format_mask))"
+          classx << "  a = node.xpath('summary/*',&:name)"
+          classx << "  yaml_fields = a - (#{fields}  + %w(format_mask))"
           classx << "yaml_fields.each do |field|"
           classx << %q(instance_eval "def #{field}; YAML.load(@node.element('summary/#{field}/text()')); end")
           classx << "end"

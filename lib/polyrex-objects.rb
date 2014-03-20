@@ -11,7 +11,7 @@ class PolyrexObjects
 
   class PolyrexObject
 
-    attr_reader :node    
+    attr_reader :node, :id
 
     def initialize(node, id='0')
       @@id = id
@@ -46,6 +46,10 @@ class PolyrexObjects
 
     def element(xpath)
       @node.element(xpath)
+    end
+
+    def id()
+      @node.attributes[:id]
     end
 
     def inspect()

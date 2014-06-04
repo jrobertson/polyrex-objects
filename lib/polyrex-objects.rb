@@ -9,6 +9,7 @@ require 'rexle'
 
 class PolyrexObjects
 
+
   class PolyrexObject
 
     attr_reader :node, :id
@@ -58,7 +59,7 @@ class PolyrexObjects
 
     def to_h()
       @fields.inject({}) do |r, field|
-        r.merge(field => self.method(field).call)
+        r.merge(field.capitalize => self.method(field).call)
       end
     end
 
@@ -115,7 +116,8 @@ class PolyrexObjects
             classx << "  if @node.element('summary/#{field}').nil? then"
             classx << "    @node.element('summary').add Rexle::Element.new('#{field}')"
             classx << "  end"
-            classx << "  @node.element('summary/#{field}/text()').clone"
+            classx << "  node = @node.element('summary/#{field}/text()')"
+            classx << "  node ? node.clone : ''"
             classx << "end"
             classx << "def #{field}=(text)"
             classx << "  if @node.element('summary/#{field}').nil? then"

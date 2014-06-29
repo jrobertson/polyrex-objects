@@ -65,6 +65,52 @@ class PolyrexObjects
       self.records[n]
     end
 
+    def to_dynarex()
+
+      root = Rexle.new(self.to_xml).root
+
+      summary = root.element('summary')
+      e = summary.element('schema')
+      child_schema = root.element('records/*/summary/schema/text()')\
+                                            .sub('[','(').sub(']',')')
+      e.text = "%s/%s" % [e.text, child_schema]
+      summary.delete('format_mask')
+      summary.element('recordx_type').text = 'dynarex'
+
+      summary.add root.element('records/*/summary/format_mask').clone
+      root.xpath('records/*/summary/format_mask').each(&:delete)
+
+xsl_buffer =<<EOF
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:output encoding="UTF-8"
+            indent="yes"
+            omit-xml-declaration="yes"/>
+
+  <xsl:template match="*">
+    <xsl:element name="{name()}">
+    <xsl:element name="summary">
+      <xsl:for-each select="summary/*">
+        <xsl:copy-of select="."/>
+      </xsl:for-each>
+    </xsl:element>
+    <xsl:element name="records">
+      <xsl:for-each select="records/*">
+        <xsl:element name="{name()}">
+          <xsl:copy-of select="summary/*"/>
+        </xsl:element>
+      </xsl:for-each>
+    </xsl:element>
+    </xsl:element>
+  </xsl:template>
+</xsl:stylesheet>
+EOF
+      xslt  = Nokogiri::XSLT(xsl_buffer)
+      buffer = xslt.transform(Nokogiri::XML(root.xml)).to_s
+      Dynarex.new buffer
+
+    end
+
+
     def to_h()
       @fields.inject({}) do |r, field|
         r.merge(field.capitalize => self.method(field).call)

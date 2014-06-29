@@ -28,6 +28,10 @@ class PolyrexObjects
       self.class.new Rexle.new(self.node.to_a).root
     end
 
+    def count()
+      self.records.length
+    end
+
     def create(id=nil)
       id ||= @@id 
       id.succ!
@@ -55,6 +59,10 @@ class PolyrexObjects
 
     def inspect()
       "#<PolyrexObject:%s" % __id__
+    end
+
+    def [](n)
+      self.records[n]
     end
 
     def to_h()

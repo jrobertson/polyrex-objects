@@ -134,6 +134,7 @@ EOF
 
     @node = node
     @@id = id
+    @schema = schema
 
     if schema then
 
@@ -143,49 +144,18 @@ EOF
 
       a.each do |x|
 
-        name, raw_fields = x.split('[')
+        r = x[/[^\{]+(?=\})/]
 
-        if raw_fields then
-          fields = raw_fields.chop.split(',').map &:strip
-          @class_names << name.capitalize
-
-          classx = []  
-          classx << "class #{name.capitalize} < PolyrexObject"
-          classx << "def initialize(node=nil, id='0')"
-          classx << "  node ||= Rexle.new('<#{name}><summary/><records/></#{name}>').root"
-          classx << "  super(node,id)"
-
-          classx << "  a = node.xpath('summary/*',&:name)"
-          classx << "  yaml_fields = a - (#{fields}  + %w(format_mask))"
-          classx << "yaml_fields.each do |field|"
-          classx << %q(instance_eval "def #{field}; YAML.load(@node.element('summary/#{field}/text()')); end")
-          classx << "end"
-
-          classx << "@fields = %i(#{fields.join(' ')})"          
-          classx << "@create = PolyrexCreateObject.new('#{schema}', @@id)"
-          classx << "end"
-
-          fields.each do |field|
-            classx << "def #{field}"
-            classx << "  if @node.element('summary/#{field}').nil? then"
-            classx << "    @node.element('summary').add Rexle::Element.new('#{field}')"
-            classx << "  end"
-            classx << "  node = @node.element('summary/#{field}/text()')"
-            classx << "  node ? node.clone : ''"
-            classx << "end"
-            classx << "def #{field}=(text)"
-            classx << "  if @node.element('summary/#{field}').nil? then"
-            classx << "    @node.element('summary').add Rexle::Element.new('#{field}', text)"
-            classx << "  else"
-            classx << "    @node.element('summary/#{field}').text = text"
-            classx << "  end"
-            classx << "end"
+        if r then
+          r.split(/\s*;\s*/).each do |s|
+            name, raw_fields = s.split('[')
+            make_class(name, raw_fields)
           end
-
-          classx << "end"          
-
-          eval classx.join("\n")
+        else
+          name, raw_fields = x.split('[')
+          make_class(name, raw_fields)
         end
+
       end
 
       if @class_names.length < 2 then
@@ -211,6 +181,61 @@ EOF
       end
       
       self.instance_eval(methodx.join("\n"))
+    end
+  end
+
+  def to_a
+    @class_names.map {|x| eval(x)}
+  end
+  
+  def to_h
+    Hash[self.to_a.map {|x| [x.name[/\w+$/], x]}]
+  end
+  
+  private
+
+  def make_class(name, raw_fields)
+
+    if raw_fields then
+      fields = raw_fields.chop.split(',').map &:strip
+      @class_names << name.capitalize
+
+      classx = []  
+      classx << "class #{name.capitalize} < PolyrexObject"
+      classx << "def initialize(node=nil, id='0')"
+      classx << "  node ||= Rexle.new('<#{name}><summary/><records/></#{name}>').root"
+      classx << "  super(node,id)"
+
+      classx << "  a = node.xpath('summary/*',&:name)"
+      classx << "  yaml_fields = a - (#{fields}  + %w(format_mask))"
+      classx << "yaml_fields.each do |field|"
+      classx << %q(instance_eval "def #{field}; YAML.load(@node.element('summary/#{field}/text()')); end")
+      classx << "end"
+
+      classx << "@fields = %i(#{fields.join(' ')})"          
+      classx << "@create = PolyrexCreateObject.new('#{@schema}', @@id)"
+      classx << "end"
+
+      fields.each do |field|
+        classx << "def #{field}"
+        classx << "  if @node.element('summary/#{field}').nil? then"
+        classx << "    @node.element('summary').add Rexle::Element.new('#{field}')"
+        classx << "  end"
+        classx << "  node = @node.element('summary/#{field}/text()')"
+        classx << "  node ? node.clone : ''"
+        classx << "end"
+        classx << "def #{field}=(text)"
+        classx << "  if @node.element('summary/#{field}').nil? then"
+        classx << "    @node.element('summary').add Rexle::Element.new('#{field}', text)"
+        classx << "  else"
+        classx << "    @node.element('summary/#{field}').text = text"
+        classx << "  end"
+        classx << "end"
+      end
+
+      classx << "end"          
+
+      eval classx.join("\n")
     end
   end
 
@@ -255,13 +280,6 @@ EOF
 
   end
 
-  def to_a
-    @class_names.map {|x| eval(x)}
-  end
-  
-  def to_h
-    Hash[self.to_a.map {|x| [x.name[/\w+$/], x]}]
-  end
-  
+
 
 end

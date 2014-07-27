@@ -14,7 +14,7 @@ class PolyrexObjects
 
     attr_reader :node, :id
 
-    def initialize(node, id='0')
+    def initialize(node, id: '0')
       @@id = id
       @node = node
       @fields =[]
@@ -32,8 +32,9 @@ class PolyrexObjects
       self.records.length
     end
 
-    def create(id=nil)
-      id ||= @@id 
+    def create(id: '0')
+      id ||=@@id
+
       id.succ!
       @create.id = id         
 
@@ -130,10 +131,11 @@ EOF
     end
   end
   
-  def initialize(schema, id='0', node=nil)
+  def initialize(schema, node=nil, id: '0')
 
     @node = node
     @@id = id
+
     @schema = schema
 
     if schema then
@@ -171,13 +173,13 @@ EOF
       @class_names[1..-1].each_with_index do |class_name, k|    
         eval "#{class_name}.class_eval {        
           def parent()
-            #{@class_names[k]}.new(@node.parent.parent, @@id)
+            #{@class_names[k]}.new(@node.parent.parent, id: @@id)
           end                
         }"
       end
       
       methodx = @class_names.map do |name|
-        %Q(def #{name.downcase}(); #{name}.new(@node, @@id); end)
+        %Q(def #{name.downcase}(); #{name}.new(@node, id: @@id); end)
       end
       
       self.instance_eval(methodx.join("\n"))
@@ -202,9 +204,10 @@ EOF
 
       classx = []  
       classx << "class #{name.capitalize} < PolyrexObject"
-      classx << "def initialize(node=nil, id='0')"
+      classx << "def initialize(node=nil, id: '0')"
+      classx << "  @id = id"
       classx << "  node ||= Rexle.new('<#{name}><summary/><records/></#{name}>').root"
-      classx << "  super(node,id)"
+      classx << "  super(node, id: id)"
 
       classx << "  a = node.xpath('summary/*',&:name)"
       classx << "  yaml_fields = a - (#{fields}  + %w(format_mask))"
@@ -213,7 +216,7 @@ EOF
       classx << "end"
 
       classx << "@fields = %i(#{fields.join(' ')})"          
-      classx << "@create = PolyrexCreateObject.new('#{@schema}', @@id)"
+      classx << "@create = PolyrexCreateObject.new('#{@schema}', id: '#{@id}')"
       classx << "end"
 
       fields.each do |field|
@@ -247,7 +250,7 @@ EOF
         classes = {#{@class_names.map{|x| %Q(%s: %s) % [x[/[^:]+$/].downcase,x]}.join(',')} }
 
         objects = @node.xpath('records/*').map do |record| 
-          classes[record.name.to_sym].new(record, @@id)
+          classes[record.name.to_sym].new(record, id: '#{@@id}')
         end
 
         def objects.records=(node); @node = node; end

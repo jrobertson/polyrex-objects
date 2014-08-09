@@ -140,8 +140,9 @@ EOF
 
     if schema then
 
-      a = schema.split('/')
-      a.shift
+      #a = schema.split('/')
+      #a.shift
+      a = schema.scan(/\w+\[[^\]]+\]/)
       @class_names = []
 
       a.each do |x|

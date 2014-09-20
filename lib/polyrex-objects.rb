@@ -205,7 +205,10 @@ EOF
       classx << "  a = node.xpath('summary/*',&:name)"
       classx << "  yaml_fields = a - (#{fields}  + %w(format_mask))"
       classx << "yaml_fields.each do |field|"
-      classx << %q(instance_eval "def #{field}; YAML.load(@node.element('summary/#{field}/text()')); end")
+      classx << %q( "def self.#{field})
+      classx << %q(    s = @node.element('summary/#{field}/text()'))
+      classx << %q(    s[/^---/] ? YAML.load(s) : s)
+      classx << %q(  end")
       classx << "end"
 
       classx << "@fields = %i(#{fields.join(' ')})"          

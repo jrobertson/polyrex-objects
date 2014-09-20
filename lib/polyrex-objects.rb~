@@ -139,27 +139,19 @@ EOF
     @schema = schema
 
     if schema then
-
-      #a = schema.split('/')
-      #a.shift
-      a = schema.scan(/\w+\[[^\]]+\]/)
+  
       @class_names = []
 
-      a.each do |x|
-
-        r = x[/[^\{]+(?=\})/]
-
-        if r then
-          r.split(/\s*;\s*/).each do |s|
-            name, raw_fields = s.split('[')
-            make_class(name, raw_fields)
-          end
-        else
-          name, raw_fields = x.split('[')
-          make_class(name, raw_fields)
+      h = PolyrexSchema.new(schema).to_h
+  
+      scan = -> (a) do
+        a.each do |x|
+          make_class(x[:name], x[:fields], x[:schema])
+          scan.call(x[:children]) if x[:children]
         end
-
       end
+
+      scan.call h
 
       if @class_names.length < 2 then
         make_def_records(@class_names.first)
@@ -188,7 +180,7 @@ EOF
   end
 
   def to_a
-    @class_names.map {|x| eval(x)}
+    @class_names.map {|x| eval(x.to_s)}
   end
   
   def to_h
@@ -197,10 +189,10 @@ EOF
   
   private
 
-  def make_class(name, raw_fields)
+  def make_class(name, fields, schema=@schema)
 
-    if raw_fields then
-      fields = raw_fields.chop.split(',').map &:strip
+    if fields then
+
       @class_names << name.capitalize
 
       classx = []  
@@ -213,7 +205,10 @@ EOF
       classx << "  a = node.xpath('summary/*',&:name)"
       classx << "  yaml_fields = a - (#{fields}  + %w(format_mask))"
       classx << "yaml_fields.each do |field|"
-      classx << %q(instance_eval "def #{field}; YAML.load(@node.element('summary/#{field}/text()')); end")
+      classx << %q( "def self.#{field})
+      classx << %q(    s = @node.element('summary/#{field}/text()'))
+      classx << %q(    s[/^---/] ? YAML.load(s) : s)
+      classx << %q(  end")
       classx << "end"
 
       classx << "@fields = %i(#{fields.join(' ')})"          

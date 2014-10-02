@@ -212,7 +212,7 @@ EOF
       classx << "end"
 
       classx << "@fields = %i(#{fields.join(' ')})"          
-      classx << "@create = PolyrexCreateObject.new('#{@schema}', id: '#{@id}')"
+      classx << "@create = PolyrexCreateObject.new('#{@schema[/\/(.*)/,1]}', id: '#{@id}')"
       classx << "end"
 
       fields.each do |field|

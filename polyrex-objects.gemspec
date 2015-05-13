@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = 'polyrex-objects'
-  s.version = '0.8.5'
-  s.summary = 'polyrex-objects'
+  s.version = '0.9.0'
+  s.summary = 'Polyrex-objects automically builds objects from a Polyrex schema'
   s.authors = ['James Robertson']
   s.files = Dir['lib/**/*.rb']
   s.add_runtime_dependency('polyrex-createobject', '~> 0.5', '>=0.5.2') 

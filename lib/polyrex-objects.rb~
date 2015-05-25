@@ -65,6 +65,10 @@ class PolyrexObjects
     def [](n)
       self.records[n]
     end
+    
+    def to_doc()
+      Rexle.new @node.to_a
+    end
 
     def to_dynarex()
 
@@ -225,7 +229,7 @@ EOF
         classx << "end"
         classx << "def #{field}=(text)"
         classx << "  if @node.element('summary/#{field}').nil? then"
-        classx << "    @node.element('summary').add Rexle::Element.new('#{field}', text)"
+        classx << "    @node.element('summary').add Rexle::Element.new('#{field}', value: text)"
         classx << "  else"
         classx << "    @node.element('summary/#{field}').text = text"
         classx << "  end"

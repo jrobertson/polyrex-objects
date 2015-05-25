@@ -23,6 +23,11 @@ class PolyrexObjects
     def add(pxobj)
       @node.element('records').add pxobj.node
     end
+    
+    
+    def at_css(s)
+      @node.at_css s
+    end
 
     def clone()
       self.class.new Rexle.new(self.node.to_a).root
@@ -40,7 +45,11 @@ class PolyrexObjects
 
       @create.record = @node.element('records')
       @create
-    end    
+    end
+    
+    def css(s)
+      @node.css s
+    end
 
     def delete()
       @node.delete

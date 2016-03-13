@@ -118,8 +118,9 @@ xsl_buffer =<<EOF
   </xsl:template>
 </xsl:stylesheet>
 EOF
-      xslt  = Nokogiri::XSLT(xsl_buffer)
-      buffer = xslt.transform(Nokogiri::XML(root.xml)).to_s
+      #jr130316 xslt  = Nokogiri::XSLT(xsl_buffer)
+      #jr130316 buffer = xslt.transform(Nokogiri::XML(root.xml)).to_s
+      buffer = Rexslt.new(xsl_buffer, root.xml).to_s
       Dynarex.new buffer
 
     end
@@ -252,7 +253,7 @@ EOF
   end
 
   def make_def_records(class_name, i=0)
-
+    
     eval "#{class_name}.class_eval { 
       def records()
 

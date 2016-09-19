@@ -89,9 +89,10 @@ class PolyrexObjects
                                             .sub('[','(').sub(']',')')
       e.text = "%s/%s" % [e.text, child_schema]
       summary.delete('format_mask')
-      summary.element('recordx_type').text = 'dynarex'
+      summary.delete('recordx_type')
 
       summary.add root.element('records/*/summary/format_mask').clone
+
       root.xpath('records/*/summary/format_mask').each(&:delete)
 
 xsl_buffer =<<EOF
@@ -118,10 +119,19 @@ xsl_buffer =<<EOF
   </xsl:template>
 </xsl:stylesheet>
 EOF
-      #jr130316 xslt  = Nokogiri::XSLT(xsl_buffer)
-      #jr130316 buffer = xslt.transform(Nokogiri::XML(root.xml)).to_s
-      buffer = Rexslt.new(xsl_buffer, root.xml).to_s
-      Dynarex.new buffer
+
+      File.write '/home/james/test.xsl', xsl_buffer
+      File.write '/home/james/test.xml', root.xml
+      begin
+        rexslt = Rexslt.new(xsl_buffer, root.xml)
+        buffer = rexslt.to_s
+      rescue
+        puts ($!).inspect
+        exit
+      end
+
+      r = Dynarex.new buffer
+      r
 
     end
 
@@ -130,6 +140,22 @@ EOF
       @fields.inject({}) do |r, field|
         r.merge(field.capitalize => self.method(field).call)
       end
+    end
+    
+    def to_s()
+      
+      if self.respond_to? :records then
+        
+        build(self.records).join("\n")
+        
+      else
+
+        summary = self.element 'summary'
+        format_mask = summary.text('format_mask').to_s
+        format_mask.gsub(/\[![^\]]+\]/){|x| summary.text(x[2..-2]).to_s}
+        
+      end
+      
     end
 
     def to_xml(options={})
@@ -143,6 +169,25 @@ EOF
     def xpath(s)
       @node.xpath(s)
     end
+    
+    private
+    
+    def build(records, indent=0)
+
+      records.map do |item|
+
+        summary = item.element 'summary'
+        format_mask = summary.text('format_mask').to_s
+        line = format_mask.gsub(/\[![^\]]+\]/){|x| summary.text(x[2..-2]).to_s}
+
+        records = item.element('records').elements.to_a
+        
+        if records.length > 0 then
+          line = line + "\n" + build(records, indent + 1).join("\n") 
+        end
+        ('  ' * indent) + line
+      end
+    end    
   end
   
   def initialize(schema, node=nil, id: '0')

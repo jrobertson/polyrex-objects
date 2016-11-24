@@ -138,7 +138,7 @@ EOF
 
     def to_h()
       @fields.inject({}) do |r, field|
-        r.merge(field.capitalize => self.method(field).call)
+        r.merge(field=> self.method(field).call)
       end
     end
     

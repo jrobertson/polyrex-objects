@@ -61,6 +61,18 @@ class PolyrexObjects
     def deep_clone()
       self.class.new Rexle.new(self.to_xml).root
     end
+    
+    def each_recursive(parent=self, level=0, &blk)
+      
+      parent.records.each.with_index do |x, index|
+
+        blk.call(x, parent, level, index) if block_given?
+
+        each_recursive(x, level+1, &blk) if x.records.any?
+        
+      end
+      
+    end      
 
     def element(xpath)
       @node.element(xpath)

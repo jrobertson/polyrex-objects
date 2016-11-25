@@ -86,6 +86,14 @@ class PolyrexObjects
 
     end
     
+    def parent?()
+      
+      # if the node is at the 1st level of records it will not have a 
+      # PolyrexObject parent
+      
+      node.parent.parent.parent.parent ? true : false
+    end
+    
     def to_doc()
       Rexle.new @node.to_a
     end

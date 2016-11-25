@@ -14,10 +14,13 @@ class PolyrexObjects
 
     attr_reader :node, :id
 
-    def initialize(node, id: '0')
+    def initialize(node, id: '0', objects: nil)
+      
       @@id = id
       @node = node
       @fields =[]
+      @objects = objects
+      
     end
     
     def add(pxobj)
@@ -75,6 +78,14 @@ class PolyrexObjects
       self.records[n]
     end
     
+    def parent()
+
+      parent_node = self.node.parent.parent
+      @objects[parent_node.name]\
+          .new(parent_node, id: parent_node.attributes[:id], objects: @objects)
+
+    end
+    
     def to_doc()
       Rexle.new @node.to_a
     end
@@ -120,8 +131,7 @@ xsl_buffer =<<EOF
 </xsl:stylesheet>
 EOF
 
-      File.write '/home/james/test.xsl', xsl_buffer
-      File.write '/home/james/test.xml', root.xml
+
       begin
         rexslt = Rexslt.new(xsl_buffer, root.xml)
         buffer = rexslt.to_s
@@ -256,10 +266,10 @@ EOF
 
       classx = []  
       classx << "class #{name.capitalize} < PolyrexObject"
-      classx << "def initialize(node=nil, id: '0')"
+      classx << "def initialize(node=nil, id: '0', objects: nil)"
       classx << "  @id = id"
       classx << "  node ||= Rexle.new('<#{name}><summary/><records/></#{name}>').root"
-      classx << "  super(node, id: id)"
+      classx << "  super(node, id: id, objects: objects)"
 
       classx << "  a = node.xpath('summary/*',&:name)"
       classx << "  yaml_fields = a - (#{fields}  + %w(format_mask))"

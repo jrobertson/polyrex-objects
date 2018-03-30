@@ -11,7 +11,7 @@ class PolyrexObjects
 
   class PolyrexObject
 
-    def initialize(node, id: '0', debug: true)
+    def initialize(node, id: '0', debug: false)
 
       @id = id
       @fields =[]
@@ -38,6 +38,10 @@ class PolyrexObjects
     
     def at_css(s)
       @node.at_css s
+    end
+    
+    def attributes()
+      @node.attributes
     end
 
     def clone()

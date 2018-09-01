@@ -10,6 +10,8 @@ require 'rexle'
 class PolyrexObjects
 
   class PolyrexObject
+    
+    attr_reader :node, :id
 
     def initialize(node, id: '0', debug: false)
 

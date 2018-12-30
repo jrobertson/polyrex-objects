@@ -19,17 +19,21 @@ class PolyrexObjects
       @fields =[]
       @node, @debug = node, debug
 
-      e = node.element('summary')
-      @schema = e.text('schema')
-      @child_schema = @schema =~ /\// ? @schema[/(?<=\/).*/] : @schema
-      puts '@child_schema:' + @child_schema.inspect if @debug
-      @record = @schema[/^[^\[]+/]
-      @fields = @schema[/(?<=\[)[^\]]+/].split(/ *, */)
-      
-      attr = @fields.map {|x| [x, e.text(x)] }
-      build_attributes attr
+      if node then
+        
+        e = node.element('summary')
+        @schema = e.text('schema')
+        @child_schema = @schema =~ /\// ? @schema[/(?<=\/).*/] : @schema
+        puts '@child_schema:' + @child_schema.inspect if @debug
+        @record = @schema[/^[^\[]+/]
+        @fields = @schema[/(?<=\[)[^\]]+/].split(/ *, */)
+        
+        attr = @fields.map {|x| [x, e.text(x)] }
+        build_attributes attr
 
-      define_singleton_method(@record.to_sym) { self.records}
+        define_singleton_method(@record.to_sym) { self.records}
+        
+      end
 
     end
 
